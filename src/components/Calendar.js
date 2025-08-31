@@ -18,17 +18,24 @@ let touchStartX = 0;
 let touchStartY = 0;
 const SWIPE_THRESHOLD_X = 50; // 水平スワイプの閾値（ピクセル）
 
+/**
+ * カレンダーコンポーネントの初期化とエントリーポイント
+ * @param {HTMLElement} container - カレンダーを描画するコンテナ要素
+ */
 export function renderCalendar(container) {
     if (container) containerEl = container;
     if (!containerEl || !store.user) return;
     
-    // ログイン時やビュー切替時にリスナーを初期化
+    // 既存のデータ監視をクリア
     unsubscribes.forEach(unsub => unsub());
     unsubscribes = [];
-    setupFirestoreListeners(); // データ監視を開始
+    // Firestoreのデータ監視を開始
+    setupFirestoreListeners();
 }
 
-// Firestoreのデータ監視を開始する
+/**
+ * Firestoreのデータ変更をリアルタイムで監視するリスナーを設定
+ */
 function setupFirestoreListeners() {
     if (!store.user) return;
     const uid = store.user.uid;
@@ -42,7 +49,7 @@ function setupFirestoreListeners() {
         unsubscribes.push(onSnapshot(query(collection(db, `users/${uid}/${col}`)), snap => {
             store[col] = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             loadedCount++;
-            // 初回は全てのデータが揃ってから描画、以降は都度更新
+            // 初回は全てのデータが揃ってから描画、以降はデータ更新の都度、UIを更新
             if (isInitialRender && loadedCount >= initialLoads) {
                 updateUI();
                 isInitialRender = false;
@@ -53,7 +60,9 @@ function setupFirestoreListeners() {
     });
 }
 
-// UIの全ての動的な部分を再描画する、シンプルで堅牢なメイン関数
+/**
+ * UIの全ての動的な部分を再描画する、シンプルで堅牢なメイン関数
+ */
 function updateUI() {
     if (!containerEl) return;
 
@@ -141,12 +150,7 @@ function updateUI() {
 function renderDailySchedule() {
     const dailyView = document.getElementById('daily-schedule-view');
     if (!dailyView) return;
-
-    if (store.currentView !== 'personal') {
-        dailyView.innerHTML = '';
-        return;
-    }
-
+    if (store.currentView !== 'personal') { dailyView.innerHTML = ''; return; }
     const dateStr = timestampToYYYYMMDD({ toDate: () => store.selectedDate });
     const dayEvents = store.events.filter(e => timestampToYYYYMMDD(e.start) === dateStr);
     let allItems = dayEvents.map(e => ({ item: e, type: 'event' }));
@@ -181,12 +185,7 @@ function renderDailySchedule() {
 function renderDailyShifts() {
     const dailyView = document.getElementById('daily-schedule-view');
     if (!dailyView) return;
-    
-    if (store.currentView !== 'work') {
-        dailyView.innerHTML = '';
-        return;
-    }
-    
+    if (store.currentView !== 'work') { dailyView.innerHTML = ''; return; }
     const dateStr = timestampToYYYYMMDD({ toDate: () => store.selectedDate });
     const dayShifts = store.shifts.filter(s => timestampToYYYYMMDD(s.start) === dateStr).sort((a,b) => a.start.toDate() - b.start.toDate());
     const shiftsHTML = dayShifts.map(s => {
@@ -202,18 +201,21 @@ function renderDailyShifts() {
 
 // 日単位で移動する（ホイール・スワイプ用）
 function navigateDay(direction) {
-    if (isWheeling) return;
-    isWheeling = true;
     store.selectedDate.setDate(store.selectedDate.getDate() + direction);
-    updateUI(); // 状態が変わったのでUI全体を更新
-    setTimeout(() => { isWheeling = false; }, 100);
+    // 月が変わった場合は、月移動と同じ重い処理を呼ぶ
+    if (store.selectedDate.getMonth() !== store.currentDate.getMonth()) {
+        navigateMonth(direction > 0 ? 1 : -1);
+    } else {
+        // 月が同じ場合は、軽量な更新を行う
+        updateUI();
+    }
 }
 
 // 月単位で移動する（ボタン・ホイール・スワイプ用）
 function navigateMonth(direction) {
     store.currentDate.setMonth(store.currentDate.getMonth() + direction);
     store.selectedDate = new Date(store.currentDate);
-    updateUI(); // 状態が変わったのでUI全体を更新
+    updateUI(); // 月が変わったのでUI全体を更新
 }
 
 // すべてのイベントリスナーをまとめて設定する
@@ -258,7 +260,9 @@ function attachEventListeners() {
     }, { passive: false });
     document.getElementById('daily-schedule-view')?.addEventListener('wheel', (e) => {
         e.preventDefault();
+        if(isWheeling) return; isWheeling = true;
         navigateDay(e.deltaY > 0 ? 1 : -1);
+        setTimeout(() => isWheeling = false, 100);
     }, { passive: false });
 
     // スワイプイベント

@@ -46,7 +46,7 @@ export function renderSalaryReport(container) {
                      <button id="toggle-salary-report" class="text-gray-500 hover:text-gray-800"><i class="far fa-eye"></i></button>
                 </div>
                 <div class="text-center my-6">
-                    <p class="text-2xl font-bold text-gray-500">調整中</p>
+                    <p class="text-4xl font-bold text-green-600">¥ ${salaryData.totalSalary.toLocaleString()}</p>
                 </div>
             </div>
             <div class="border-t">
@@ -66,10 +66,7 @@ export function renderSalaryReport(container) {
 function attachEventListeners() {
     document.getElementById('toggle-salary-report')?.addEventListener('click', () => {
         store.isSalaryReportVisible = !store.isSalaryReportVisible;
-        
-        const userSettingsRef = doc(db, 'users', store.user.uid);
-        setDoc(userSettingsRef, { settings: { isSalaryReportVisible: store.isSalaryReportVisible } }, { merge: true });
-        
+        localStorage.setItem('isSalaryReportVisible', store.isSalaryReportVisible);
         renderSalaryReport();
     });
     document.getElementById('toggle-salary-detail')?.addEventListener('click', () => {
