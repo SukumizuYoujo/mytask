@@ -1,0 +1,25 @@
+body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+}
+.form-label { 
+    display: block; 
+    margin-bottom: 0.5rem; 
+    font-weight: 500; 
+    color: #4a5568; 
+    font-size: 0.875rem; 
+}
+.form-input { 
+    width: 100%; 
+    padding: 0.5rem 0.75rem; 
+    box-sizing: border-box; 
+    border: 1px solid #d1d5db; 
+    border-radius: 0.375rem; 
+    font-size: 1rem; 
+}
+.toggle-checkbox:checked { 
+    right: 0; 
+    border-color: #3b82f6; 
+}
+.toggle-checkbox:checked + .toggle-label { 
+    background-color: #3b82f6; 
+}
