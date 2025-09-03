@@ -32,6 +32,9 @@ jobs:
           sed -i "s|__VITE_APP_ID__|${{ secrets.VITE_APP_ID }}|g" $TARGET_FILE
           sed -i "s|__VITE_MEASUREMENT_ID__|${{ secrets.VITE_MEASUREMENT_ID }}|g" $TARGET_FILE
       
+      - name: Check file content after replacement
+        run: cat ./src/firebase.js
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
         
