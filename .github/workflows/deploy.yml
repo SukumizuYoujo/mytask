@@ -12,6 +12,11 @@ permissions:
 
 jobs:
   deploy:
+    # ▼▼▼ この environment ブロックを追加 ▼▼▼
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # ▲▲▲ ここまで ▲▲▲
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -19,10 +24,7 @@ jobs:
 
       - name: Replace Firebase API Keys
         run: |
-          # 置換対象のファイルを指定
           TARGET_FILE=./src/firebase.js
-          
-          # 各Secretの値で目印を置き換える
           sed -i "s|__VITE_API_KEY__|${{ secrets.VITE_API_KEY }}|g" $TARGET_FILE
           sed -i "s|__VITE_AUTH_DOMAIN__|${{ secrets.VITE_AUTH_DOMAIN }}|g" $TARGET_FILE
           sed -i "s|__VITE_DATABASE_URL__|${{ secrets.VITE_DATABASE_URL }}|g" $TARGET_FILE
@@ -31,14 +33,14 @@ jobs:
           sed -i "s|__VITE_MESSAGING_SENDER_ID__|${{ secrets.VITE_MESSAGING_SENDER_ID }}|g" $TARGET_FILE
           sed -i "s|__VITE_APP_ID__|${{ secrets.VITE_APP_ID }}|g" $TARGET_FILE
           sed -i "s|__VITE_MEASUREMENT_ID__|${{ secrets.VITE_MEASUREMENT_ID }}|g" $TARGET_FILE
-
+      
       - name: Setup Pages
         uses: actions/configure-pages@v5
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # プロジェクトのルートをそのままアップロード
+          path: '.'
           
       - name: Deploy to GitHub Pages
         id: deployment
